@@ -82,6 +82,18 @@ def show_exam_result(request, submission_id):
         for lesson in course.lessons.prefetch_related("questions__choices").all()
         for question in lesson.questions.all()
     ]
+    question_results = []
+    for question in questions:
+        correct_choices = [
+            choice.choice_text for choice in question.choices.all() if choice.is_correct
+        ]
+        question_results.append(
+            {
+                "question_text": question.question_text,
+                "correct_choices": correct_choices,
+                "grade": question.grade,
+            }
+        )
     possible_score = sum(question.grade for question in questions)
     total_score = int((submission.score / 100) * possible_score) if possible_score else 0
     enrollment = course.learners.filter(
@@ -98,5 +110,6 @@ def show_exam_result(request, submission_id):
             "passed": passed,
             "total_score": total_score,
             "possible_score": possible_score,
+            "question_results": question_results,
         },
     )

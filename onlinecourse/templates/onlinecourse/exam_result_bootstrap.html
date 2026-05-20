@@ -56,6 +56,25 @@
                             {% endif %}
                         </div>
 
+                        <div class="text-start mt-4">
+                            <h2 class="h4 mb-3">Detailed Exam Results</h2>
+                            <div class="list-group">
+                                {% for result in question_results %}
+                                <div class="list-group-item py-3">
+                                    <p class="fw-semibold mb-2">
+                                        Question {{ forloop.counter }}:
+                                        {{ result.question_text }}
+                                    </p>
+                                    <p class="mb-1 text-success">
+                                        Correct Answer{% if result.correct_choices|length > 1 %}s{% endif %}:
+                                        {{ result.correct_choices|join:", " }}
+                                    </p>
+                                    <small class="text-muted">Points: {{ result.grade }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
                         <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-lg">
                             Return to Course
                         </a>
