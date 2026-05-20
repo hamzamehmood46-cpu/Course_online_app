@@ -6,8 +6,8 @@ from .models import Choice, Course, Instructor, Learner, Lesson, Question, Submi
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
+    list_display = ("name", "description")
+    search_fields = ("name", "description")
 
 
 @admin.register(Instructor)
@@ -29,10 +29,19 @@ class QuestionInline(admin.TabularInline):
     fields = ("question_text", "grade")
 
 
+class LessonInline(admin.TabularInline):
+    model = Lesson
+    extra = 1
+    fields = ("title", "content", "order")
+
+
 class ChoiceInline(admin.TabularInline):
     model = Choice
     extra = 2
     fields = ("choice_text", "is_correct")
+
+
+CourseAdmin.inlines = [LessonInline]
 
 
 @admin.register(Question)
@@ -47,7 +56,7 @@ class QuestionAdmin(admin.ModelAdmin):
 class LessonAdmin(admin.ModelAdmin):
     list_display = ("title", "course", "order")
     list_filter = ("course",)
-    search_fields = ("title", "course__name")
+    search_fields = ("title", "content", "course__name")
     inlines = [QuestionInline]
 
 
