@@ -28,7 +28,7 @@ def submit_exam(request, course_id):
         return redirect("course_detail", course_id=course_id)
 
     course = get_object_or_404(
-        Course.objects.prefetch_related("lessons__questions__choices"),
+        Course.objects.prefetch_related("lessons__questions__choices", "learners"),
         pk=course_id,
     )
     questions = [
@@ -40,21 +40,32 @@ def submit_exam(request, course_id):
     if not questions:
         raise Http404("No questions are available for this course.")
 
-    correct_answers = 0
+    selected_choice_ids = []
     for question in questions:
         selected_choice_id = request.POST.get(f"question_{question.id}")
         if not selected_choice_id:
             continue
-        if question.choices.filter(pk=selected_choice_id, is_correct=True).exists():
-            correct_answers += 1
+        selected_choice_ids.append(selected_choice_id)
 
-    total_questions = len(questions)
-    score = int((correct_answers / total_questions) * 100)
+    total_score = sum(question.is_get_score(selected_choice_ids) for question in questions)
+    possible_score = sum(question.grade for question in questions)
+    correct_answers = sum(
+        1 for question in questions if question.is_get_score(selected_choice_ids) == question.grade
+    )
+    score = int((total_score / possible_score) * 100) if possible_score else 0
+    enrollment = course.learners.filter(
+        first_name__iexact=request.POST.get("user_name", "")
+    ).first() or course.learners.first()
+
     submission = Submission.objects.create(
         course=course,
-        user_name=request.POST.get("user_name") or "Student",
+        user_name=(
+            f"{enrollment.first_name} {enrollment.last_name}"
+            if enrollment
+            else request.POST.get("user_name") or "Student"
+        ),
         score=score,
-        total_questions=total_questions,
+        total_questions=len(questions),
         total_correct=correct_answers,
     )
     return redirect("show_exam_result", submission_id=submission.id)
@@ -65,12 +76,27 @@ def show_exam_result(request, submission_id):
         Submission.objects.select_related("course"),
         pk=submission_id,
     )
+    course = submission.course
+    questions = [
+        question
+        for lesson in course.lessons.prefetch_related("questions__choices").all()
+        for question in lesson.questions.all()
+    ]
+    possible_score = sum(question.grade for question in questions)
+    total_score = int((submission.score / 100) * possible_score) if possible_score else 0
+    enrollment = course.learners.filter(
+        first_name__iexact=submission.user_name.split(" ")[0]
+    ).first()
     passed = submission.score >= 60
     return render(
         request,
-        "onlinecourse/exam_result.html",
+        "onlinecourse/exam_result_bootstrap.html",
         {
             "submission": submission,
+            "course": course,
+            "enrollment": enrollment,
             "passed": passed,
+            "total_score": total_score,
+            "possible_score": possible_score,
         },
     )

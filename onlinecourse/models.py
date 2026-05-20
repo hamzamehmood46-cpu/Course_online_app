@@ -58,6 +58,11 @@ class Question(models.Model):
     def __str__(self):
         return self.question_text
 
+    def is_get_score(self, selected_choice_ids):
+        if any(choice.is_get_score(selected_choice_ids) for choice in self.choices.all()):
+            return self.grade
+        return 0
+
 
 class Choice(models.Model):
     question = models.ForeignKey(
@@ -70,6 +75,9 @@ class Choice(models.Model):
 
     def __str__(self):
         return self.choice_text
+
+    def is_get_score(self, selected_choice_ids):
+        return self.is_correct and str(self.id) in {str(choice_id) for choice_id in selected_choice_ids}
 
 
 class Submission(models.Model):
