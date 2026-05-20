@@ -1,13 +1,26 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group, User
 
-from .models import Choice, Course, Lesson, Question, Submission
+from .models import Choice, Course, Instructor, Learner, Lesson, Question, Submission
 
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ("name",)
+
+
+@admin.register(Instructor)
+class InstructorAdmin(admin.ModelAdmin):
+    list_display = ("first_name", "last_name", "full_time")
+    list_filter = ("full_time",)
+    search_fields = ("first_name", "last_name")
+
+
+@admin.register(Learner)
+class LearnerAdmin(admin.ModelAdmin):
+    list_display = ("first_name", "last_name", "email")
+    search_fields = ("first_name", "last_name", "email")
 
 
 class QuestionInline(admin.TabularInline):

@@ -9,6 +9,26 @@ class Course(models.Model):
         return self.name
 
 
+class Instructor(models.Model):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    full_time = models.BooleanField(default=True)
+    courses = models.ManyToManyField(Course, related_name="instructors", blank=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class Learner(models.Model):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    courses = models.ManyToManyField(Course, related_name="learners", blank=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
 class Lesson(models.Model):
     course = models.ForeignKey(
         Course,

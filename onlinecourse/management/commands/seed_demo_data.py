@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from onlinecourse.models import Choice, Course, Lesson, Question
+from onlinecourse.models import Choice, Course, Instructor, Learner, Lesson, Question
 
 
 class Command(BaseCommand):
@@ -16,6 +16,19 @@ class Command(BaseCommand):
                 ),
             },
         )
+
+        instructor, _ = Instructor.objects.get_or_create(
+            first_name="Ava",
+            last_name="Johnson",
+            defaults={"full_time": True},
+        )
+        instructor.courses.add(course)
+
+        learner, _ = Learner.objects.get_or_create(
+            email="hamza@example.com",
+            defaults={"first_name": "Hamza", "last_name": "Mehmood"},
+        )
+        learner.courses.add(course)
 
         lesson_specs = [
             (
